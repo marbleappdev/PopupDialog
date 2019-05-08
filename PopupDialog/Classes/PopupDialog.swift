@@ -67,7 +67,7 @@ final public class PopupDialog: UIViewController {
     // MARK: Public
 
     /// The content view of the popup dialog
-    public var viewController: UIViewController
+    @objc public var viewController: UIViewController
 
     /// Whether or not to shift view for keyboard display
     public var keyboardShiftsView = true
@@ -83,8 +83,7 @@ final public class PopupDialog: UIViewController {
      - parameter buttonAlignment:  The dialog button alignment
      - parameter transitionStyle:  The dialog transition style
      - parameter preferredWidth:   The preferred width for iPad screens
-     - parameter tapGestureDismissal: Indicates if dialog can be dismissed via tap gesture
-     - parameter panGestureDismissal: Indicates if dialog can be dismissed via pan gesture
+     - parameter gestureDismissal: Indicates if dialog can be dismissed via pan gesture
      - parameter hideStatusBar:    Whether to hide the status bar on PopupDialog presentation
      - parameter completion:       Completion block invoked when dialog was dismissed
 
@@ -94,11 +93,10 @@ final public class PopupDialog: UIViewController {
                 title: String?,
                 message: String?,
                 image: UIImage? = nil,
-                buttonAlignment: UILayoutConstraintAxis = .vertical,
+                buttonAlignment: NSLayoutConstraint.Axis = .vertical,
                 transitionStyle: PopupDialogTransitionStyle = .bounceUp,
                 preferredWidth: CGFloat = 340,
-                tapGestureDismissal: Bool = true,
-                panGestureDismissal: Bool = true,
+                gestureDismissal: Bool = true,
                 hideStatusBar: Bool = false,
                 completion: (() -> Void)? = nil) {
 
@@ -113,8 +111,7 @@ final public class PopupDialog: UIViewController {
                   buttonAlignment: buttonAlignment,
                   transitionStyle: transitionStyle,
                   preferredWidth: preferredWidth,
-                  tapGestureDismissal: tapGestureDismissal,
-                  panGestureDismissal: panGestureDismissal,
+                  gestureDismissal: gestureDismissal,
                   hideStatusBar: hideStatusBar,
                   completion: completion)
     }
@@ -126,8 +123,7 @@ final public class PopupDialog: UIViewController {
      - parameter buttonAlignment:  The dialog button alignment
      - parameter transitionStyle:  The dialog transition style
      - parameter preferredWidth:   The preferred width for iPad screens
-     - parameter tapGestureDismissal: Indicates if dialog can be dismissed via tap gesture
-     - parameter panGestureDismissal: Indicates if dialog can be dismissed via pan gesture
+     - parameter gestureDismissal: Indicates if dialog can be dismissed via pan gesture
      - parameter hideStatusBar:    Whether to hide the status bar on PopupDialog presentation
      - parameter completion:       Completion block invoked when dialog was dismissed
 
@@ -135,17 +131,17 @@ final public class PopupDialog: UIViewController {
      */
     @objc public init(
         viewController: UIViewController,
-        buttonAlignment: UILayoutConstraintAxis = .vertical,
+        buttonAlignment: NSLayoutConstraint.Axis = .vertical,
         transitionStyle: PopupDialogTransitionStyle = .bounceUp,
         preferredWidth: CGFloat = 340,
-        tapGestureDismissal: Bool = true,
-        panGestureDismissal: Bool = true,
+        gestureDismissal: Bool = true,
         hideStatusBar: Bool = false,
         completion: (() -> Void)? = nil) {
 
         self.viewController = viewController
         self.preferredWidth = preferredWidth
         self.hideStatusBar = hideStatusBar
+        self.statusBarShouldBeHidden = hideStatusBar
         self.completion = completion
         super.init(nibName: nil, bundle: nil)
 
@@ -163,22 +159,19 @@ final public class PopupDialog: UIViewController {
         modalPresentationCapturesStatusBarAppearance = true
 
         // Add our custom view to the container
-        addChildViewController(viewController)
+        addChild(viewController)
         popupContainerView.stackView.insertArrangedSubview(viewController.view, at: 0)
         popupContainerView.buttonStackView.axis = buttonAlignment
-        viewController.didMove(toParentViewController: self)
+        viewController.didMove(toParent: self)
 
-        // Allow for dialog dismissal on background tap
-        if tapGestureDismissal {
+        // Allow for dialog dismissal on background tap and dialog pan gesture
+        if gestureDismissal {
+            let panRecognizer = UIPanGestureRecognizer(target: interactor, action: #selector(InteractiveTransition.handlePan))
+            popupContainerView.stackView.addGestureRecognizer(panRecognizer)
             let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap))
             tapRecognizer.cancelsTouchesInView = false
-            popupContainerView.addGestureRecognizer(tapRecognizer)
-        }
-        // Allow for dialog dismissal on dialog pan gesture
-        if panGestureDismissal {
-            let panRecognizer = UIPanGestureRecognizer(target: interactor, action: #selector(InteractiveTransition.handlePan))
             panRecognizer.cancelsTouchesInView = false
-            popupContainerView.stackView.addGestureRecognizer(panRecognizer)
+            popupContainerView.addGestureRecognizer(tapRecognizer)
         }
     }
 
@@ -191,7 +184,9 @@ final public class PopupDialog: UIViewController {
 
     /// Replaces controller view with popup view
     public override func loadView() {
-        view = PopupDialogContainerView(frame: UIScreen.main.bounds, preferredWidth: preferredWidth)
+        let popupContainerView = PopupDialogContainerView(frame: UIScreen.main.bounds, preferredWidth: preferredWidth)
+        popupContainerView.shadowEnabled = false
+        view = popupContainerView;
     }
 
     public override func viewWillAppear(_ animated: Bool) {
@@ -307,6 +302,11 @@ final public class PopupDialog: UIViewController {
     public override var preferredStatusBarUpdateAnimation: UIStatusBarAnimation {
         return .slide
     }
+    
+    // MARK: - Rotation
+    public override var shouldAutorotate: Bool {
+        return false
+    }
 }
 
 // MARK: - View proxy values
@@ -314,7 +314,7 @@ final public class PopupDialog: UIViewController {
 extension PopupDialog {
 
     /// The button alignment of the alert dialog
-    @objc public var buttonAlignment: UILayoutConstraintAxis {
+    @objc public var buttonAlignment: NSLayoutConstraint.Axis {
         get {
             return popupContainerView.buttonStackView.axis
         }

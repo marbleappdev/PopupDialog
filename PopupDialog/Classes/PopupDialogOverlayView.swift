@@ -77,6 +77,7 @@ final public class PopupDialogOverlayView: UIView {
         blurView.isDeepRendering = true
         blurView.tintColor = .clear
         blurView.autoresizingMask = [.flexibleHeight, .flexibleWidth]
+        blurView.isHidden = true
         return blurView
     }()
 

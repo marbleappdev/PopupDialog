@@ -44,8 +44,8 @@ open class PopupDialogButton: UIButton {
     
     /// The title color of the button
     @objc open dynamic var titleColor: UIColor? {
-        get { return self.titleColor(for: UIControlState()) }
-        set { setTitleColor(newValue, for: UIControlState()) }
+        get { return self.titleColor(for: UIControl.State()) }
+        set { setTitleColor(newValue, for: UIControl.State()) }
     }
 
     /// The background color of the button
@@ -62,18 +62,25 @@ open class PopupDialogButton: UIButton {
             leftSeparator.backgroundColor = newValue
         }
     }
+    
+    /// The corner radius of the button
+    @objc open dynamic var buttonCornerRadius: CGFloat {
+        get { return layer.cornerRadius }
+        set { layer.cornerRadius = newValue }
+    }
 
     /// Default appearance of the button
     open var defaultTitleFont      = UIFont.systemFont(ofSize: 14)
     open var defaultTitleColor     = UIColor(red: 0.25, green: 0.53, blue: 0.91, alpha: 1)
     open var defaultButtonColor    = UIColor.clear
     open var defaultSeparatorColor = UIColor(white: 0.9, alpha: 1)
+    open var defaultButtonCornerRadius   = CGFloat(0)
 
     /// Whether button should dismiss popup when tapped
     @objc open var dismissOnTap = true
 
     /// The action called when the button is tapped
-    open fileprivate(set) var buttonAction: PopupDialogButtonAction?
+    @objc open var buttonAction: PopupDialogButtonAction?
 
     // MARK: Private
 
@@ -120,7 +127,7 @@ open class PopupDialogButton: UIButton {
         super.init(frame: .zero)
 
         // Set the button title
-        setTitle(title, for: UIControlState())
+        setTitle(title, for: UIControl.State())
 
         self.dismissOnTap = dismissOnTap
 
@@ -137,11 +144,12 @@ open class PopupDialogButton: UIButton {
     open func setupView() {
 
         // Default appearance
-        setTitleColor(defaultTitleColor, for: UIControlState())
+        setTitleColor(defaultTitleColor, for: UIControl.State())
         titleLabel?.font              = defaultTitleFont
         backgroundColor               = defaultButtonColor
         separator.backgroundColor     = defaultSeparatorColor
         leftSeparator.backgroundColor = defaultSeparatorColor
+        layer.cornerRadius            = defaultButtonCornerRadius
 
         // Add and layout views
         addSubview(separator)

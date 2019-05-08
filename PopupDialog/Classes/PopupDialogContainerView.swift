@@ -64,6 +64,12 @@ final public class PopupDialogContainerView: UIView {
         }
         set { shadowContainer.layer.shadowColor = newValue?.cgColor }
     }
+    
+    /// The spacing of buttons
+    @objc public dynamic var buttonSpacing: CGFloat {
+        get { return buttonStackView.spacing }
+        set { buttonStackView.spacing = newValue }
+    }
 
     // MARK: - Views
 
@@ -162,8 +168,8 @@ final public class PopupDialogContainerView: UIView {
         constraints += NSLayoutConstraint.constraints(withVisualFormat: "V:|[container]|", options: [], metrics: nil, views: views)
 
         // Main stack view constraints
-        constraints += NSLayoutConstraint.constraints(withVisualFormat: "H:|[stackView]|", options: [], metrics: nil, views: views)
-        constraints += NSLayoutConstraint.constraints(withVisualFormat: "V:|[stackView]|", options: [], metrics: nil, views: views)
+        constraints += NSLayoutConstraint.constraints(withVisualFormat: "H:|-15-[stackView]-15-|", options: [], metrics: nil, views: views)
+        constraints += NSLayoutConstraint.constraints(withVisualFormat: "V:|-15-[stackView]-15-|", options: [], metrics: nil, views: views)
 
         // Activate constraints
         NSLayoutConstraint.activate(constraints)
